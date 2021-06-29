@@ -1,13 +1,55 @@
-const reportWebVitals = onPerfEntry => {
-  if (onPerfEntry && onPerfEntry instanceof Function) {
-    import('web-vitals').then(({ getCLS, getFID, getFCP, getLCP, getTTFB }) => {
-      getCLS(onPerfEntry);
-      getFID(onPerfEntry);
-      getFCP(onPerfEntry);
-      getLCP(onPerfEntry);
-      getTTFB(onPerfEntry);
-    });
-  }
+Survey
+    .StylesManager
+    .applyTheme("modern");
+
+var json = {
+    "title": "Survey Title&Logo demo",
+    "description": "Please take look at the survey title and logo. Test the settings on the right panel ->",
+    "logo": "https://surveyjs.io/favicon.ico",
+    "logoWidth": 60,
+    "logoHeight": 60,
+    "questions": [
+        {
+            "name": "name",
+            "type": "text",
+            "title": "Please enter your name:",
+            "placeHolder": "Jon Snow",
+            "isRequired": true
+        }, {
+            "name": "birthdate",
+            "type": "text",
+            "inputType": "date",
+            "title": "Your birthdate:",
+            "isRequired": true
+        }, {
+            "name": "color",
+            "type": "text",
+            "inputType": "color",
+            "title": "Your favorite color:"
+        }, {
+            "name": "email",
+            "type": "text",
+            "inputType": "email",
+            "title": "Your e-mail:",
+            "placeHolder": "jon.snow@nightwatch.org",
+            "isRequired": true,
+            "validators": [
+                {
+                    "type": "email"
+                }
+            ]
+        }
+    ]
 };
 
-export default reportWebVitals;
+window.survey = new Survey.Model(json);
+
+survey
+    .onComplete
+    .add(function (sender) {
+        document
+            .querySelector('#surveyResult')
+            .textContent = "Result JSON:\n" + JSON.stringify(sender.data, null, 3);
+    });
+
+ReactDOM.render(<Survey.Survey model={survey}/>, document.getElementById("surveyElement"));
