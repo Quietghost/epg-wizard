@@ -19,16 +19,16 @@ var json = {
 
           }, {
               type: "complete",
-              expression: "{einstieg} = 'item3'"
+              expression: "{einstieg} = 'item3'"    
             }, {
               type: "complete",
               expression: "{einstieg} = 'item4'"
             }, {
               type: "complete",
-              expression: "{fa} = 'item2'"
+              expression: "{fa} = 'Service'"
             }, {
               type: "complete",
-              expression: "{zweck} != 'item1'"
+              expression: "{zweck} != 'FA'"
             }
         ],
       pages: [
@@ -90,19 +90,19 @@ var json = {
               isRequired: true,
               choices: [
                 {
-                  value: "item1",
+                  value: "A",
                   text: "RZ Primus, Linie A"
                 },
                 {
-                  value: "item2",
+                  value: "P",
                   text: "RZ Primus, Linie P"
                 },
                 {
-                  value: "item3",
+                  value: "C",
                   text: "RZ Primus, Linie C"
                 },
                 {
-                  value: "item4",
+                  value: "Legacy",
                   text: "RZ Primus, Legacy Infrastruktur"
                 }
               ]
@@ -120,11 +120,11 @@ var json = {
               isRequired: true,
               choices: [
                 {
-                  value: "item1",
+                  value: "Fachanwendung",
                   text: "Ja"
                 },
                 {
-                  value: "item2",
+                  value: "Service",
                   text: "Nein"
                 }
               ]
@@ -132,7 +132,7 @@ var json = {
               type: "dropdown",
               name: "services",
               title: "Ist das System für einen der folgenden Services vorgesehen?",
-              visibleIf: "{fa}='item2'",
+              visibleIf: "{fa}='Service'",
               isRequired: true,
               colCount: 0,
               choices: [
@@ -169,11 +169,11 @@ var json = {
               isRequired: true,
               choices: [
                 {
-                  value: "item1",
+                  value: "ES",
                   text: "Ja"
                 },
                 {
-                  value: "item2",
+                  value: "GS",
                   text: "Nein"
                 }
               ]
@@ -192,11 +192,11 @@ var json = {
               isRequired: true,
               choices: [
                 {
-                  value: "item1",
+                  value: "PR",
                   text: "Ja"
                 },
                 {
-                  value: "item2",
+                  value: "NP",
                   text: "Nein"
                 }
               ]
@@ -214,19 +214,19 @@ var json = {
               isRequired: true,
               choices: [
                 {
-                  value: "item1",
+                  value: "FA",
                   text: "Anwendungsserver / Webserver"
                 },
                 {
-                  value: "item2",
+                  value: "DB",
                   text: "Datenbank-System"
                 },
                 {
-                  value: "item3",
+                  value: "Storage",
                   text: "Storage-System"
                 },
                 {
-                  value: "item4",
+                  value: "Backup",
                   text: "Backupserver-System"
                 }
               ]
@@ -275,19 +275,19 @@ var json = {
               isRequired: true,
               choices: [
                 {
-                  value: "item1",
+                  value: "FE",
                   text: "von Benutzern im Internet oder aus Kantonen, bundesnahen Organisationen"
                 },
                 {
-                  value: "item2",
+                  value: "FE_2",
                   text: "von Systemen im Internet"
                 },
                 {
-                  value: "item3",
+                  value: "BE_1",
                   text: "von Benutzern aus internen Netzen (CZ-APS)"
                 },
                 {
-                  value: "item4",
+                  value: "BE_2",
                   text: "von internen Systemen (SZ, SZP, SVZ, ...)"
                 }
               ]
@@ -306,13 +306,14 @@ var json = {
       questionTitleLocation: "top",
       questionErrorLocation: "bottom"
     };
-
+    
 class SurveyComponent extends React.Component {
+
   constructor(props) {
     super(props);
   
     this.model = new Survey.Model(json);
-    this.state = { isCompleted: false, isAborted: false };
+    this.state = { isCompleted: false, isAborted: false, data: ""};
     this.onCompleteComponent = this.onCompleteComponent.bind(this);
   }
 
@@ -321,9 +322,9 @@ class SurveyComponent extends React.Component {
     const hasValue = JSON.stringify(this.model.data, null, 3).includes("rz");
 
     if (hasValue) {
-      this.setState({ isCompleted: true });
+      this.setState({ isCompleted: true, data: this.model.data});
     } else {
-      this.setState({ isCompleted: true, isAborted: true });
+      this.setState({ isCompleted: true, isAborted: true, data: this.model.data});
     }
   }
 
@@ -333,7 +334,6 @@ class SurveyComponent extends React.Component {
     var surveyRender = !this.state.isCompleted ? (
       <Survey.Survey
         model={this.model}
-      
         showCompletedPage={false}
         onComplete={this.onCompleteComponent}
       />
