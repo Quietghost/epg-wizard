@@ -4,8 +4,17 @@ import * as Survey from "survey-react";
 import "./styles.css";
 //import "survey-react/survey.css";
 import 'survey-react/modern.css';
+import Typography from '@material-ui/core/Typography'
+import AppBar from "@material-ui/core/AppBar";
+import Toolbar from "@material-ui/core/Toolbar";
+import Grid from "@material-ui/core/Grid";
+import Button from "@material-ui/core/Button";
 
 Survey.StylesManager.applyTheme('modern');
+
+const refreshPage = ()=>{
+  window.location.reload();
+}  
 
 var json = {
   title: "SDN EPG Wizard ",
@@ -314,7 +323,9 @@ class SurveyComponent extends React.Component {
   
     this.model = new Survey.Model(json);
     this.state = { isCompleted: false, isAborted: false, data: ""};
-    this.onCompleteComponent = this.onCompleteComponent.bind(this);
+    this.onCompleteComponent = this.onCompleteComponent.bind(this)
+    this.displayResultsComponent = this.displayResultsComponent.bind(this)
+
   }
 
   onCompleteComponent() {
@@ -328,27 +339,116 @@ class SurveyComponent extends React.Component {
     }
   }
 
-  
+  displayResultsComponent() {
+
+    var svzEpgServices = new Map([["Verzeichnisdienst (ausser AD)","ACCMGMT"],
+    ["Verzeichnisdienst AD Domain Controller ADR","DIRSVC"],
+    ["Verzeichnisdienst AD Domain Controller AD-SSZ","DIRSVC"],
+    ["Verzeichnisdienst AD Domain Controller ADB","DIRSVC"],
+    ["Identity Mgmt. (eIAM, DirX,...) Access Mgmt. (eIAM, ...)","IDMGMT"],
+    ["Mgmt. von Systemen (WSUS, SCCM, KMS, ...)","SYSMGMT"],
+    ["Logging (syslog Server Zone, Splunk) Monitoring (SNMP Server, Patrol, ...)","LOGGING"],
+    ["Messaging (Exchange, Lync)","MESSAGING"],
+    ["Sicherheits-Tools (FortiSandbox, nessus, ...)","SECSW"],
+    ["Netzwerk-Dienste (DNS, NTP, DHCP)","NETWSVC"],
+    ["Orchestration (Urban Code)","ORCH"],
+    ["Repositorys","REP"],
+    ["Mgmt von Storage und Backup","STOMGMT"],
+    ["Mgmt von Netzwerk-Elementen (FortiManager, Cisco APIC)","NETWMGMT"],
+    ["Mgmt von Hardware (HP OneView)","HWMGMT"],
+    ["Datenbank-Systeme","DB"],
+    ["Storage-Systeme","NAS"],
+    ["Backupserver-Systeme","BACKUP"]]);
+
+    var str = JSON.stringify(this.state.data);
+    var map = new Map(Object.entries(JSON.parse(str)));
+    console.log(map)
+    var service = svzEpgServices.get(map.get("services"));
+    console.log(service)
+
+      return(
+        <Grid container 
+      spacing={1} 
+      alignItems="center" 
+      justifyContent="center" 
+      style={{ minHeight: '20vh' }}>
+        <Grid>
+        <AppBar position="fixed" style={{ background: '#18a689' }}>
+        <Toolbar>
+        <Typography>
+          Ergebnis
+        </Typography>
+        </Toolbar>
+      </AppBar>
+      </Grid>
+        <Grid >
+        <Typography>
+        {service}
+        </Typography>
+        <Button variant="contained" onClick={refreshPage} style={{marginTop: 10}}>
+        Beenden
+        </Button>
+        </Grid>
+      </Grid>
+      );
+  }
+
   render(){
 
+    var result = "Failed";
+
+    if (this.state.isCompleted && !this.state.isAborted) 
+      {result = this.displayResultsComponent();}
+
+    
     var surveyRender = !this.state.isCompleted ? (
       <Survey.Survey
         model={this.model}
         showCompletedPage={false}
         onComplete={this.onCompleteComponent}
+        displayResults={this.displayResultsComponent}
       />
     ) : null;
     
     var onCompleteComponent = (this.state.isCompleted && !this.state.isAborted) ? (
-      <div>{JSON.stringify(this.model.data, null, 3)}</div>
+      <div>
+      {result}
+      </div>
     ) : (this.state.isCompleted && this.state.isAborted) ? (
-      <div><h3>Leider kann der Wizard nicht benutzt werden, sondern es muss direkt mit der Architektur Kontakt aufgenommen werden.</h3></div>
+      <div>
+      <Grid container 
+      spacing={1} 
+      alignItems="center" 
+      justifyContent="center" 
+      style={{ minHeight: '20vh' }}>
+        <Grid>
+        <AppBar position="fixed" style={{ background: '#18a689' }}>
+        <Toolbar>
+        <Typography>
+          Ergebnis
+        </Typography>
+        </Toolbar>
+      </AppBar>
+      </Grid>
+        <Grid >
+        <Typography align='center'>        
+        Leider kann der Wizard nicht benutzt werden, sondern es muss direkt mit der Architektur Kontakt aufgenommen werden. 
+      </Typography>
+        </Grid>
+      <Grid>
+      <Button variant="contained" onClick={refreshPage} >
+        Beenden
+        </Button>
+      </Grid>
+      </Grid>
+      </div>
     ) : null;
     
     return (
       <div>
         {surveyRender}
         {onCompleteComponent}
+ 
       </div>
     );
   }
