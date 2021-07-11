@@ -278,13 +278,13 @@ var json = {
             {
               type: "radiogroup",
               name: "zugriff",
-              visibleIf: "{ad} = 'ADR' or {ad} = 'ADSSZ'",
+              visibleIf: "{ad} = 'sonstiges AD (nicht aufgelistet, z.B. ADB, AD EDA, ...)' or {ad} = '(zukünftige Möglichkeit) AD-Frontend, AD-Backend'",
               title: "Woher kommen die Zugriffe auf die Systeme?",
               hideNumber: true,
               isRequired: true,
               choices: [
                 {
-                  value: "FE",
+                  value: "FE_1",
                   text: "von Benutzern im Internet oder aus Kantonen, bundesnahen Organisationen"
                 },
                 {
@@ -360,37 +360,93 @@ class SurveyComponent extends React.Component {
     ["Storage-Systeme","NAS"],
     ["Backupserver-Systeme","BACKUP"]]);
 
-    var str = JSON.stringify(this.state.data);
-    var map = new Map(Object.entries(JSON.parse(str)));
-    console.log(map)
-    var service = svzEpgServices.get(map.get("services"));
-    console.log(service)
+    var directories = new Map([["ADR","ADR"],
+    ["ADSSZ","ADSSZ"],
+    ["sonstiges AD (nicht aufgelistet, z.B. ADB, AD EDA, ...)","Sonstige"],
+    ["(zukünftige Möglichkeit) AD-Frontend, AD-Backend","FE_BE"]]);
 
-      return(
-        <Grid container 
-      spacing={1} 
-      alignItems="center" 
-      justifyContent="center" 
-      style={{ minHeight: '20vh' }}>
-        <Grid>
+    var result = "";
+    var str = JSON.stringify(this.state.data);
+    console.log(str)
+    var map = new Map(Object.entries(JSON.parse(str)));
+    var rzLine = map.get("rz");
+    rzLine = (rzLine === "A") ? rzLine + "2" : rzLine;
+    var service = svzEpgServices.get(map.get("services"));
+    var withSVZ = JSON.stringify(this.model.data, null, 3).includes("services");
+
+    if (withSVZ){
+      result = rzLine + "_SVZ_" + "BIT_" + service;
+    }else{
+      var sicherheit = map.get("sicherheit");
+      var environment = "_" + map.get("produktion");
+      var netzwerkZone = (sicherheit === "ES") ? "_SZP" : "_SZ"
+      var fachanwendung = "";
+      var activeDirectory = "";
+      var esSicherheit = (netzwerkZone === "_SZP") ? "_ES" : ""
+      var beutzerVerwaltung = map.get("benutzer");
+
+      switch (map.get("zweck"))
+      {
+        case "FA":
+          if (directories.get(map.get("ad")) !== ("Sonstige" || "FE_BE")){
+            activeDirectory = esSicherheit + "_" + directories.get(map.get("ad"));}
+            else{
+              var neueAds = (map.get("zugriff") === ("FE_1" || "FE_2")) ? "FE" : "BE"
+              activeDirectory = esSicherheit + "_" + neueAds
+            }
+          if (beutzerVerwaltung !== "Active Directory"){
+              activeDirectory = esSicherheit + "_FE"
+          } 
+          break;
+        case "DB":
+          fachanwendung = "_DB"
+          break;
+        case "Storage": 
+          fachanwendung = "_NAS"
+          break;
+        case "Backup":
+          fachanwendung = "_BACKUP"
+          break;
+        default: 
+          break;
+      }
+
+      if (netzwerkZone === "_SZP" && rzLine === "A")
+        rzLine = "P"
+
+      result = rzLine + netzwerkZone + "_BIT" +
+      activeDirectory + fachanwendung
+      + environment;
+    }
+
+    return(
+      <Grid container 
+        spacing={1} 
+        alignItems="center" 
+        justifyContent="center" 
+        direction="column"
+        style={{ minHeight: '20vh' }}>
+        <Grid >
         <AppBar position="fixed" style={{ background: '#18a689' }}>
         <Toolbar>
         <Typography>
           Ergebnis
         </Typography>
-        </Toolbar>
-      </AppBar>
+      </Toolbar>
+    </AppBar>
+    </Grid>
+      <Grid item xs style={{marginTop: 80}}>
+      <Typography>
+      {result}
+      </Typography>
+      <Grid item xs>
+      <Button variant="contained" onClick={refreshPage} style={{marginTop: 30}}>
+      Beenden
+      </Button>
       </Grid>
-        <Grid >
-        <Typography>
-        {service}
-        </Typography>
-        <Button variant="contained" onClick={refreshPage} style={{marginTop: 10}}>
-        Beenden
-        </Button>
-        </Grid>
       </Grid>
-      );
+    </Grid>
+    );
   }
 
   render(){
@@ -420,6 +476,7 @@ class SurveyComponent extends React.Component {
       spacing={1} 
       alignItems="center" 
       justifyContent="center" 
+      direction="column"
       style={{ minHeight: '20vh' }}>
         <Grid>
         <AppBar position="fixed" style={{ background: '#18a689' }}>
@@ -430,12 +487,12 @@ class SurveyComponent extends React.Component {
         </Toolbar>
       </AppBar>
       </Grid>
-        <Grid >
+        <Grid item xs style={{marginTop: 80}}>
         <Typography align='center'>        
         Leider kann der Wizard nicht benutzt werden, sondern es muss direkt mit der Architektur Kontakt aufgenommen werden. 
       </Typography>
         </Grid>
-      <Grid>
+      <Grid item xs>
       <Button variant="contained" onClick={refreshPage} >
         Beenden
         </Button>
